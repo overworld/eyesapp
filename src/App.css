@@ -1,14 +1,16 @@
-body{
-margin: 0;
+body {
+    margin: 0;
+    overflow: hidden;
+
 }
 
-.googlyeyes{
+.googlyeyes {
     position: relative;
-    left:0;
+    left: 0;
     top: 0;
     width: 100vw;
     height: 100vh;
-    background-color:#ff3e3e;
+    background-color: #ff3e3e;
 }
 
 video {
@@ -16,9 +18,9 @@ video {
     z-index: 9;
 }
 
-button{
+.screen {
     position: absolute;
-    left: 50%;
+    left: 45%;
     bottom: 10%;
     width: 70px;
     height: 70px;
@@ -26,4 +28,39 @@ button{
     background-color: aqua;
     color: white;
     border-radius: 50%;
+}
+
+.menuButton {
+    z-index: 99;
+    position: absolute;
+    background-color: DodgerBlue;
+    border: none;
+    color: white;
+    padding: 16px 20px;
+    font-size: 16px;
+}
+
+.menu {
+    background-color: white;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    z-index: 98;
+    transform: translateX(100%);
+    transition: transform 500ms;
+}
+
+.menu.open{
+    transform: translateX(0);
+}
+
+.mds {
+    width: 30%;
+    left: 35%;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
 }
