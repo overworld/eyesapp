@@ -3,10 +3,27 @@ margin: 0;
 }
 
 .googlyeyes{
-    position: absolute;
+    position: relative;
     left:0;
     top: 0;
     width: 100vw;
     height: 100vh;
     background-color:#ff3e3e;
+}
+
+video {
+    position: relative;
+    z-index: 9;
+}
+
+button{
+    position: absolute;
+    left: 50%;
+    bottom: 10%;
+    width: 70px;
+    height: 70px;
+    z-index: 99;
+    background-color: aqua;
+    color: white;
+    border-radius: 50%;
 }

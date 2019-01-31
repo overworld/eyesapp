@@ -4,11 +4,16 @@ import Googlyeyes from './googlyeyes'
 
 class App extends Component {
 
+  takePicture()
+  {
+    this.refs.googlyeyes.picture();
+  }
 
   render() {
     return (
       <div className="App">
-        <Googlyeyes> </Googlyeyes>
+        <button onClick={() => this.takePicture()}>PICTURE</button>
+        <Googlyeyes ref={"googlyeyes"}> </Googlyeyes>
       </div>
     );
   }

@@ -1,25 +1,25 @@
 import React, {Component} from 'react';
-import {Engine, Render, Runner, Composite, Composites, Common, Constraint, MouseConstraint, Mouse, World, Bodies} from "matter-js"
+import {Engine,Render, Runner, Composite, Composites, Common, Constraint, MouseConstraint, Mouse, World, Bodies} from "matter-js"
+import Physique from './classes/physique'
+import Eye from './classes/eye'
+import Camera from './classes/camera'
 
 class googlyeyes extends Component {
 
     constructor() {
         super();
-
-        this.engine = Engine.create();
-        this.world = this.engine.world;
-        this.center = {
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2,
-            showAngleIndicator: true
-        }
+        this.camera = new Camera();
+        this.eyes = [];
 
     }
 
 
-    onResize(){
+    onResize() {
+        this.physique.resize();
         this.refs.canvas.width = window.innerWidth;
         this.refs.canvas.height = window.innerHeight;
+
+
     }
 
     componentDidMount() {
@@ -27,135 +27,77 @@ class googlyeyes extends Component {
         this.ctx = this.refs.canvas.getContext('2d');
         this.refs.canvas.width = window.innerWidth;
         this.refs.canvas.height = window.innerHeight;
+        this.physique = new Physique(this.refs.canvas);
 
-        this.render = Render.create({
-            canvas: this.refs.canvas,
-            engine: this.engine,
-            options: {
-                width: window.innerWidth,
-                height: window.innerHeight,
-                showAngleIndicator: true
-            }
-        });
-
-
-        this.startEngine();
-        this.createEye();
-        this.addMouse();
-        this.startRender();
-
-        window.addEventListener('resize',this.onResize.bind(this));
-        //window.addEventListener('deviceOrentation',this.updateGravity.bind(this));
-        window.addEventListener('devicemotion',this.updateMotion.bind(this));
-
-
-    }
-
-    updateMotion(event)
-    {
-        var x = event.accelerationIncludingGravity.x;
-        var y = event.accelerationIncludingGravity.y;
-        var z = event.accelerationIncludingGravity.z;
-
-        var gravity = this.engine.world.gravity;
-        gravity.x = -x;
-        gravity.y = y;
-    }
-
-
-    updateGravity (event) {
-        var orientation = typeof window.orientation !== 'undefined' ? window.orientation : 0,
-            gravity = this.engine.world.gravity;
-
-        if (orientation === 0) {
-            gravity.x = Common.clamp(event.gamma, -90, 90) / 90;
-            gravity.y = Common.clamp(event.beta, -90, 90) / 90;
-        } else if (orientation === 180) {
-            gravity.x = Common.clamp(event.gamma, -90, 90) / 90;
-            gravity.y = Common.clamp(-event.beta, -90, 90) / 90;
-        } else if (orientation === 90) {
-            gravity.x = Common.clamp(event.beta, -90, 90) / 90;
-            gravity.y = Common.clamp(-event.gamma, -90, 90) / 90;
-        } else if (orientation === -90) {
-            gravity.x = Common.clamp(-event.beta, -90, 90) / 90;
-            gravity.y = Common.clamp(event.gamma, -90, 90) / 90;
-        }
-    };
-
-
-    addMouse() {
-        var mouse = Mouse.create(this.render.canvas),
-            mouseConstraint = MouseConstraint.create(this.engine, {
-                mouse: mouse,
-                constraint: {
-                    // allow bodies on mouse to rotate
-                    angularStiffness: 0,
-                    render: {
-                        visible: false
-                    }
-                }
-            });
-
-    }
-
-
-    startRender() {
-        Render.lookAt(this.render, {
-            min: {x: 0, y: 0},
-            max: {x: window.innerWidth, y: window.innerHeight}
-        })
-    }
-
-
-    createEye() {
-        var body = Bodies.circle(this.center.x, this.center.y, 30);
-
-        var constraint = Constraint.create({
-            render:{
-                visible: true,
-
-            },
-            pointA: {x: this.center.x, y: this.center.y},
-            bodyB: body,
-            pointB: {x: -12, y: -12},
-            stiffness: 0.01,
-            damping: 0.03
-        });
-        World.add(this.world,[body, constraint])
-    }
-
-    startEngine() {
-        // this.render.run(this.render);
-        //this.runner = Runner.create();
-        //Runner.run(this.runner, this.engine);
-
+        //this.createEye();
+        this.physique.addMouse();
         this.draw();
 
 
+
+
+
+        window.addEventListener('resize', this.onResize.bind(this));
+        window.addEventListener('devicemotion', this.updateMotion.bind(this));
+
+
+        this.refs.canvas.addEventListener('touchstart',this.onClick.bind(this),false);
+        this.refs.canvas.addEventListener('click',this.onClick.bind(this),false);
+
+    }
+
+    updateMotion(event) {
+        var x = event.accelerationIncludingGravity.x;
+        var y = event.accelerationIncludingGravity.y;
+        //var z = event.accelerationIncludingGravity.z;
+
+        this.physique.updateGravity(x, y);
+
+    }
+
+
+
+    onClick(e){
+
+        if(e.targetTouches)
+        {
+            e = e.targetTouches[0];
+        }
+        let eye = new Eye(this.physique.world);
+        eye.updatePosition(e.clientX, e.clientY);
+        this.eyes.push(eye);
+
+
+    }
+
+
+    picture(){
+        this.camera.takeSnapshot();
     }
 
     draw() {
-        var bodies = Composite.allBodies(this.engine.world);
 
-        Engine.update(this.engine, 16);
-
-        if (bodies.length) {
+        this.physique.update();
+        this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
 
+        let videoW= this.camera.video.videoWidth;
+        let videoH = this.camera.video.videoHeight;
+        let ratio = Math.max(window.innerWidth/videoW, window.innerHeight/videoH);
 
-            this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            this.ctx.beginPath();
-            this.ctx.fillStyle = '#ffffff';
-            this.ctx.arc(this.center.x,this.center.y,80,0, Math.PI * 2);
-            this.ctx.fill();
-            this.ctx.closePath();
+        let windowWidth = window.innerWidth;
+        let windowHeigth = window.innerHeight;
 
-            this.ctx.beginPath();
-            this.ctx.fillStyle = '#000000';
-            this.ctx.arc(bodies[0].position.x, bodies[0].position.y, 30, 0, Math.PI * 2);
-            this.ctx.fill();
-            this.ctx.closePath();
+        let newVideoW = videoW * ratio;
+        let newVideoH = videoH * ratio;
+        let newX = (windowWidth - newVideoW)/2;
+        let newY = (windowHeigth - newVideoH)/2;
 
+        this.ctx.drawImage(this.camera.video,0,0,videoW,videoH,newX,newY, newVideoW, newVideoH);
+
+        for (let i = 0 ; i <this.eyes.length; i++)
+        {
+            this.eyes[i].render(this.ctx);
         }
 
         requestAnimationFrame(() => this.draw());
@@ -163,7 +105,7 @@ class googlyeyes extends Component {
 
     render() {
         return (
-            <canvas className={"googlyeyes"} ref={"canvas"}> </canvas>
+            <canvas  className={"googlyeyes"} ref={"canvas"}> </canvas>
         );
     }
 
